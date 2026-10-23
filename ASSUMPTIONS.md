@@ -16,6 +16,7 @@ The specification leaves several points open. This document lists the interpreta
 ## The state machine
 
 - **The state machine is implemented without a dedicated library.** the diagram is small and fixed, so a library would bring configuration and dependencies without adding capability.
+- **The state machine is a plain Java class, not a Spring bean.** It is pure domain logic, with no dependencies.
 
 ## Testing
 
