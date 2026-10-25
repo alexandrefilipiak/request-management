@@ -36,9 +36,6 @@ class RequestServiceTest {
     @Test
     @DisplayName("creating saves a new request in CREATED")
     void createSavesRequest() {
-        //given
-        when(repository.save(any())).thenAnswer(inv -> inv.getArgument(0));
-
         //when
         service.create(new CreateRequestCommand("name", "content"));
 
@@ -93,5 +90,81 @@ class RequestServiceTest {
         //then
         assertThat(thrown).isInstanceOf(RequestNotFoundException.class);
         verifyNoMoreInteractions(repository);
+    }
+
+    @Test
+    @DisplayName("getting returns the loaded request")
+    void getReturnsRequest() {
+        //given
+        Request request = aRequestIn(VERIFIED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        Request result = service.get(42L);
+
+        //then
+        assertThat(result).isSameAs(request);
+    }
+
+    @Test
+    @DisplayName("updating content replaces the body and saves")
+    void updateContentReplacesBody() {
+        //given
+        Request request = aRequestIn(CREATED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        service.updateContent(42L, new UpdateContentCommand("new content"));
+
+        //then
+        assertThat(request.getContent()).isEqualTo("new content");
+        verify(repository).save(request);
+    }
+
+    @Test
+    @DisplayName("accepting applies the transition")
+    void acceptAppliesTransition() {
+        //given
+        Request request = aRequestIn(VERIFIED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        service.accept(42L);
+
+        //then
+        assertThat(request.getState()).isEqualTo(ACCEPTED);
+        verify(repository).save(request);
+    }
+
+    @Test
+    @DisplayName("rejecting applies the transition with the reason")
+    void rejectAppliesTransition() {
+        //given
+        Request request = aRequestIn(VERIFIED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        service.reject(42L, new RejectRequestCommand("incomplete"));
+
+        //then
+        assertThat(request.getState()).isEqualTo(REJECTED);
+        assertThat(request.getReason()).isEqualTo("incomplete");
+        verify(repository).save(request);
+    }
+
+    @Test
+    @DisplayName("deleting applies the transition with the reason")
+    void deleteAppliesTransition() {
+        //given
+        Request request = aRequestIn(CREATED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        service.delete(42L, new DeleteRequestCommand("duplicate"));
+
+        //then
+        assertThat(request.getState()).isEqualTo(DELETED);
+        assertThat(request.getReason()).isEqualTo("duplicate");
+        verify(repository).save(request);
     }
 }

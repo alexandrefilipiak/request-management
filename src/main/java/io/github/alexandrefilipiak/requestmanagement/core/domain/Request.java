@@ -2,7 +2,6 @@ package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 import jakarta.persistence.*;
 
-
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.*;
 
 /**
@@ -40,7 +39,7 @@ public class Request {
     @Version
     private long version;
 
-    public Request() {
+    protected Request() {
         // required by JPA
     }
 
@@ -67,7 +66,9 @@ public class Request {
      *
      * @throws InvalidTransitionException if the current state does not allow this event
      */
-    public void verify() { transition(VERIFY); }
+    public void verify() {
+        apply(VERIFY, null);
+    }
 
     /**
      * Applies the {@code ACCEPT} event to this request.
@@ -75,7 +76,9 @@ public class Request {
      *
      * @throws InvalidTransitionException if the current state does not allow this event
      */
-    public void accept() { transition(ACCEPT); }
+    public void accept() {
+        apply(ACCEPT, null);
+    }
 
     /**
      * Applies the {@code REJECT} event to this request. The reason is mandatory
@@ -87,9 +90,7 @@ public class Request {
      * @throws InvalidTransitionException if the current state does not allow this event
      */
     public void reject(String reason) {
-        requireReason(REJECT, reason);
-        transition(REJECT);
-        this.reason = reason.trim();
+        apply(REJECT, reason);
     }
 
     /**
@@ -102,9 +103,7 @@ public class Request {
      * @throws InvalidTransitionException if the current state does not allow this event
      */
     public void delete(String reason) {
-        requireReason(DELETE, reason);
-        transition(DELETE);
-        this.reason = reason.trim();
+        apply(DELETE, reason);
     }
 
     /**
@@ -117,7 +116,7 @@ public class Request {
      *                                    no number is assigned in that case
      */
     public void publish(long publicationNumber) {
-        transition(PUBLISH);
+        apply(PUBLISH, null);
         this.publicationNumber = publicationNumber;
     }
 
@@ -135,13 +134,18 @@ public class Request {
         this.content = content;
     }
 
-    private void transition(RequestEvent event) {
-        this.state = RequestStateMachine.next(this.state, event);
-    }
-
-    private static void requireReason(RequestEvent event, String reason) {
+    /**
+     * Applies an event: checks the reason when the event requires one, moves to the
+     * next state according to the state machine, then stores the reason.
+     * The reason is checked first so that a failure leaves the state unchanged.
+     */
+    private void apply(RequestEvent event, String reason) {
         if (event.isReasonRequired() && (reason == null || reason.isBlank())) {
             throw new ReasonRequiredException(event);
+        }
+        this.state = RequestStateMachine.next(this.state, event);
+        if (event.isReasonRequired()) {
+            this.reason = reason.trim();
         }
     }
 
