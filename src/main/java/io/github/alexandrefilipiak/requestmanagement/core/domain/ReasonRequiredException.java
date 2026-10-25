@@ -1,6 +1,6 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
-public class ReasonRequiredException extends RuntimeException {
+public class ReasonRequiredException extends DomainException {
     private final RequestEvent event;
 
     public ReasonRequiredException(RequestEvent event) {

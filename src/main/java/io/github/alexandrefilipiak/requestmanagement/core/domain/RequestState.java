@@ -1,4 +1,4 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 public enum RequestState {
     CREATED(true), VERIFIED(true), ACCEPTED(false),

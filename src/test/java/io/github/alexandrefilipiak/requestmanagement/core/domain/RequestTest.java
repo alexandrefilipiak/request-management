@@ -1,10 +1,14 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
-import org.assertj.core.api.ThrowableAssert;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.ContentNotEditableException;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.ReasonRequiredException;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import static io.github.alexandrefilipiak.requestmanagement.domain.RequestState.*;
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestFixtures.aRequestIn;
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
 import static org.assertj.core.api.Assertions.*;
 
 public class RequestTest {
@@ -65,16 +69,5 @@ public class RequestTest {
         assertThat(request.getContent()).isEqualTo("content");
     }
 
-    private static Request aRequestIn(RequestState state) {
-        Request request = Request.create("name", "content");
-        switch (state) {
-            case VERIFIED -> request.verify();
-            case ACCEPTED -> { request.verify(); request.accept(); }
-            case PUBLISHED -> { request.verify(); request.accept(); request.publish(1L); }
-            case REJECTED -> { request.verify(); request.reject("reason"); }
-            case DELETED -> request.delete("reason");
-            default -> {}
-        }
-        return request;
-    }
+
 }

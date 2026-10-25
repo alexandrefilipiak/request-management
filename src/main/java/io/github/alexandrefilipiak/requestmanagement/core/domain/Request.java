@@ -1,9 +1,9 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 import jakarta.persistence.*;
 
 
-import static io.github.alexandrefilipiak.requestmanagement.domain.RequestEvent.*;
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.*;
 
 /**
  * A request going through the lifecycle defined by the state diagram.

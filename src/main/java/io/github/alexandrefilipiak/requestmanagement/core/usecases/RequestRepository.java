@@ -1,6 +1,6 @@
-package io.github.alexandrefilipiak.requestmanagement.usecases;
+package io.github.alexandrefilipiak.requestmanagement.core.usecases;
 
-import io.github.alexandrefilipiak.requestmanagement.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
 
 import java.util.Optional;
 

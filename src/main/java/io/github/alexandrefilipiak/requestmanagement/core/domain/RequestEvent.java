@@ -1,4 +1,4 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 public enum RequestEvent {
     VERIFY(false), ACCEPT(false), PUBLISH(false), REJECT(true), DELETE(true);

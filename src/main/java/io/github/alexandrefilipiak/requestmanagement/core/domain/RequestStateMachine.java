@@ -1,9 +1,9 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 import java.util.Map;
 
-import static io.github.alexandrefilipiak.requestmanagement.domain.RequestEvent.*;
-import static io.github.alexandrefilipiak.requestmanagement.domain.RequestState.*;
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.*;
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
 
 public class RequestStateMachine {
     private static final Map<RequestState, Map<RequestEvent, RequestState>> TRANSITIONS = Map.of(

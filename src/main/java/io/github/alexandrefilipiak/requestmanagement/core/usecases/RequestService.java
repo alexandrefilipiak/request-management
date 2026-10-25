@@ -1,6 +1,6 @@
-package io.github.alexandrefilipiak.requestmanagement.usecases;
+package io.github.alexandrefilipiak.requestmanagement.core.usecases;
 
-import io.github.alexandrefilipiak.requestmanagement.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -23,49 +23,50 @@ public class RequestService {
     }
 
     @Transactional
-    public Request create(String name, String content) {
-        return repository.save(Request.create(name, content));
+    public Long create(CreateRequestCommand command) {
+        Request request = repository.save(Request.create(command.name(), command.content()));
+        return request.getId();
     }
 
     @Transactional
-    public Request verify(long id) {
+    public void verify(long id) {
         Request request = load(id);
         request.verify();
-        return repository.save(request);
     }
 
     @Transactional
-    public Request reject(long id, String reason) {
+    public void reject(long id, RejectRequestCommand command) {
         Request request = load(id);
-        request.reject(reason);
-        return repository.save(request);
+        request.reject(command.reason());
+        repository.save(request);
     }
 
     @Transactional
-    public Request publish(long id) {
+    public Long publish(long id) {
         Request request = load(id);
         request.publish(repository.nextPublicationNumber());
-        return repository.save(request);
+        request = repository.save(request);
+        return request.getPublicationNumber();
     }
 
     @Transactional
-    public Request accept(long id) {
+    public void accept(long id) {
         Request request = load(id);
         request.accept();
-        return repository.save(request);
+        repository.save(request);
     }
 
     @Transactional
-    public Request delete(long id, String reason) {
+    public void delete(long id, DeleteRequestCommand command) {
         Request request = load(id);
-        request.delete(reason);
-        return repository.save(request);
+        request.delete(command.reason());
+        repository.save(request);
     }
 
     @Transactional
-    public Request updateContent(long id, String content) {
+    public Request updateContent(long id, UpdateContentCommand command) {
         Request request = load(id);
-        request.updateContent(content);
+        request.updateContent(command.content());
         return repository.save(request);
     }
 

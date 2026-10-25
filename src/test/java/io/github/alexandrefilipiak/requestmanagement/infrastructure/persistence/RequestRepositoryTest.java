@@ -1,8 +1,8 @@
-package io.github.alexandrefilipiak.requestmanagement.persistence;
+package io.github.alexandrefilipiak.requestmanagement.infrastructure.persistence;
 
-import io.github.alexandrefilipiak.requestmanagement.domain.Request;
-import io.github.alexandrefilipiak.requestmanagement.domain.RequestState;
-import io.github.alexandrefilipiak.requestmanagement.usecases.RequestRepository;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
+import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

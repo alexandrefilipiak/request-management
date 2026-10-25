@@ -1,6 +1,6 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
-public class ContentNotEditableException extends RuntimeException {
+public class ContentNotEditableException extends DomainException {
     private final RequestState state;
 
     public ContentNotEditableException(RequestState state) {

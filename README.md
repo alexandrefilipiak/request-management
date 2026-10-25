@@ -42,22 +42,71 @@ docker compose down
 ```
  
 Integration tests start their own PostgreSQL container through Testcontainers, so Docker must be running, but the Compose database is not needed.
- 
-## Project structure
- 
+
+## API
+
+| Method | Path                           | Body                  | Response                                      |
+|--------|--------------------------------|-----------------------|-----------------------------------------------|
+| POST   | `/requests`                    | `{"name", "content"}` | 201, `Location: /requests/{id}`, `{"id"}`     |
+| GET    | `/requests/{id}`               |                       | 200, full request                             |
+| PUT    | `/requests/{id}/content`       | `{"content"}`         | 204 (CREATED or VERIFIED only)                |
+| POST   | `/requests/{id}/verify`        |                       | 204, CREATED to VERIFIED                      |
+| POST   | `/requests/{id}/accept`        |                       | 204, VERIFIED to ACCEPTED                     |
+| POST   | `/requests/{id}/reject`        | `{"reason"}`          | 204, VERIFIED or ACCEPTED to REJECTED         |
+| POST   | `/requests/{id}/delete`        | `{"reason"}`          | 204, CREATED to DELETED                       |
+| POST   | `/requests/{id}/publish`       |                       | 200, `{"publicationNumber"}`, ACCEPTED to PUBLISHED |
+
+Mutations return no representation; `GET /requests/{id}` returns the current state:
+
+```json
+{
+  "id": 1,
+  "name": "My request",
+  "content": "Some content",
+  "state": "VERIFIED",
+  "reason": null,
+  "publicationNumber": null
+}
 ```
-# Main classes
+
+Examples:
+
+```bash
+curl -i -X POST localhost:8080/requests \
+  -H 'Content-Type: application/json' \
+  -d '{"name": "My request", "content": "Some content"}'
+ 
+curl -i -X POST localhost:8080/requests/1/verify
+ 
+curl -i -X POST localhost:8080/requests/1/reject \
+  -H 'Content-Type: application/json' \
+  -d '{"reason": "Incomplete content"}'
+ 
+curl localhost:8080/requests/1
+```
+
+### Errors
+
+Errors are returned as RFC 9457 problem details (`application/problem+json`):
+
+| Status | When                                                                                   |
+|--------|----------------------------------------------------------------------------------------|
+| 400    | Validation failure: missing or blank name, content or reason; malformed JSON           |
+| 404    | No request with that id                                                                |
+| 409    | Transition not allowed from the current state, content not editable, or concurrent modification |
+| 500    | Unexpected error; the response carries no technical detail, the server log does        |
+
+## Project structure
+
+```
 src/main/java/io/github/alexandrefilipiak/requestmanagement
-
-# Main 
-src/main/resources/application.properties
-
-# Flyway migrations
-src/main/resources/db/migration
-
-# Tests and Testcontainers configuration
-src/test/...
-
-# Local PostgreSQL
-compose.yaml
+    core
+        domain            Request entity, states, events, state machine, business exceptions
+        usecases          RequestService, commands and the RequestRepository port
+    infrastructure
+        api               REST controller, response records, exception handler
+        persistence       Spring Data JPA implementation of the port
+src/main/resources/db/migration     Flyway migrations
+src/test/java/...                   Tests and Testcontainers configuration
+compose.yaml                        Local PostgreSQL
 ```

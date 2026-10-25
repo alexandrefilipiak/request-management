@@ -1,5 +1,9 @@
-package io.github.alexandrefilipiak.requestmanagement.domain;
+package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
+import io.github.alexandrefilipiak.requestmanagement.core.domain.InvalidTransitionException;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestStateMachine;
 import org.assertj.core.api.ThrowableAssert;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
