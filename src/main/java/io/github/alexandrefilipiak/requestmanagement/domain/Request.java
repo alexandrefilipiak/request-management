@@ -1,5 +1,8 @@
 package io.github.alexandrefilipiak.requestmanagement.domain;
 
+import jakarta.persistence.*;
+
+
 import static io.github.alexandrefilipiak.requestmanagement.domain.RequestEvent.*;
 
 /**
@@ -10,13 +13,36 @@ import static io.github.alexandrefilipiak.requestmanagement.domain.RequestEvent.
  * the state, so a request can never be put in a state it did not reach through
  * a valid transition.
  */
+@Entity
+@Table(name = "requests")
 public class Request {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private String name;
+
+    @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 20)
     private RequestState state;
+
+    @Column(length = 1000)
     private String reason;
+
+    @Column(unique = true)
     private Long publicationNumber;
+
+    @Version
+    private long version;
+
+    public Request() {
+        // required by JPA
+    }
 
     private Request(String name, String content) {
         this.name = name;
@@ -117,6 +143,10 @@ public class Request {
         if (event.isReasonRequired() && (reason == null || reason.isBlank())) {
             throw new ReasonRequiredException(event);
         }
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {

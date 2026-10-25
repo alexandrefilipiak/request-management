@@ -32,12 +32,20 @@ The specification leaves several points open. This document lists the interpreta
 - **Deletion is logical.** A deleted request is not removed; it moves to the terminal `DELETED` state with its reason. Physically removing it would make the mandatory reason pointless and break the audit history.
 - **Editing is not a transition.** `updateContent` replaces the body without changing the state, and is refused outside the states flagged as editable (`CREATED`, `VERIFIED`). Only the body is editable; the name is immutable after creation.
 
-
 ## Use cases
 
 - **One `RequestService` with one method per use case** (`create`, `updateContent`, `verify`, `accept`, `reject`, `delete`, `publish`, `get`), rather than one class per use case as often prescribed in hexagonal architecture. The methods are thin (load by id, call the domain object, save) and share the same transaction pattern; separate classes would be ceremony at this size.
 - **Business rules are enforced by the domain, not the service.** The service only orchestrates and lets domain exceptions propagate. It adds `RequestNotFoundException` for unknown ids, which is a lookup concern and therefore lives in `usecases`, not `domain`. 
 - **Service tests use the real domain objects and a mocked repository port.** The domain is pure and fast, so mocking it would only hide bugs.
+
+## Persistence
+
+- **The domain entity carries the JPA mapping annotations.** A separate persistence model with a mapper would keep the domain fully free of persistence metadata, but for a flat aggregate it would duplicate the fields and require a way to rebuild a request in any state, bypassing the state machine. This is a conscious choice for a small application.
+- **The repository port is implemented by Spring Data.** `JpaRequestRepository` extends both `JpaRepository` and the `RequestRepository` port, so Spring Data generates the implementation and the only hand-written persistence code is the native query drawing the publication number from the sequence.
+- **The state is stored by name** (`@Enumerated(EnumType.STRING)`), not by ordinal, so reordering or inserting enum constants can never corrupt stored data. A test guards this.
+- **Optimistic locking with `@Version`.** Two transactions modifying the same request from the same snapshot cannot both succeed; the second one fails with `ObjectOptimisticLockingFailureException` and is rolled back.
+- **Deletion keeps the row.** Consistent with the logical deletion decided in the domain, there is no `DELETE` statement; a deleted request is a row in the `DELETED` state.
+- Ids are database-generated (`IDENTITY`); the publication number is a separate column with a unique constraint.
 
 ## Testing
 
