@@ -3,6 +3,8 @@ package io.github.alexandrefilipiak.requestmanagement.infrastructure.persistence
 import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
 import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
 import io.github.alexandrefilipiak.requestmanagement.core.domain.StateChange;
+import io.github.alexandrefilipiak.requestmanagement.core.usecases.ListRequestsQuery;
+import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestPage;
 import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -14,6 +16,7 @@ import org.springframework.context.annotation.Import;
 import io.github.alexandrefilipiak.requestmanagement.TestcontainersConfiguration;
 
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @DataJpaTest
 @Import(TestcontainersConfiguration.class)
@@ -37,11 +40,11 @@ public class RequestRepositoryTest {
         Request fromDb = repository.findById(saved.getId()).orElseThrow();
 
         //then
-        Assertions.assertThat(fromDb.getName()).isEqualTo("name");
-        Assertions.assertThat(fromDb.getContent()).isEqualTo("content");
-        Assertions.assertThat(fromDb.getPublicationNumber()).isNull();
-        Assertions.assertThat(fromDb.getState()).isEqualTo(RequestState.CREATED);
-        Assertions.assertThat(fromDb.getReason()).isNull();
+        assertThat(fromDb.getName()).isEqualTo("name");
+        assertThat(fromDb.getContent()).isEqualTo("content");
+        assertThat(fromDb.getPublicationNumber()).isNull();
+        assertThat(fromDb.getState()).isEqualTo(RequestState.CREATED);
+        assertThat(fromDb.getReason()).isNull();
     }
 
     @Test
@@ -55,7 +58,7 @@ public class RequestRepositoryTest {
 
         Request found = repository.findById(id).orElseThrow();
 
-        Assertions.assertThat(found.getHistory()).extracting(StateChange::getToState)
+        assertThat(found.getHistory()).extracting(StateChange::getToState)
                 .containsExactly(CREATED, VERIFIED);
     }
 
@@ -74,7 +77,7 @@ public class RequestRepositoryTest {
                 .getSingleResult();
 
         //then
-        Assertions.assertThat(storedState).isEqualTo("CREATED");
+        assertThat(storedState).isEqualTo("CREATED");
     }
 
     @Test
@@ -85,7 +88,51 @@ public class RequestRepositoryTest {
         long num2 = repository.nextPublicationNumber();
 
         //then
-        Assertions.assertThat(num1).isLessThan(num2);
+        assertThat(num1).isLessThan(num2);
     }
 
+    @Test
+    @DisplayName("search filters by name (partial, case-insensitive) and by state")
+    void searchFilters() {
+        //given
+        repository.save(Request.create("Budget 2026", "c"));
+        repository.save(Request.create("budget review", "c"));
+        Request verified = Request.create("Budget approval", "c");
+        verified.verify();
+        repository.save(verified);
+        repository.save(Request.create("Hiring plan", "c"));
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        RequestPage byName = repository.search(new ListRequestsQuery("budget", null, 0, 10));
+        RequestPage byNameAndState = repository.search(new ListRequestsQuery("budget", VERIFIED, 0, 10));
+
+        //then
+        assertThat(byName.items()).extracting(Request::getName)
+                .containsExactlyInAnyOrder("Budget 2026", "budget review", "Budget approval");
+        assertThat(byNameAndState.items()).extracting(Request::getName)
+                .containsExactly("Budget approval");
+    }
+
+    @Test
+    @DisplayName("search pages the results and reports the total")
+    void searchPages() {
+        //given
+        for (int i = 0; i < 12; i++) {
+            repository.save(Request.create("Paged " + i, "c"));
+        }
+        entityManager.flush();
+        entityManager.clear();
+
+        //when
+        RequestPage first = repository.search(new ListRequestsQuery("Paged", null, 0, 10));
+        RequestPage second = repository.search(new ListRequestsQuery("Paged", null, 1, 10));
+
+        //then
+        assertThat(first.items()).hasSize(10);
+        assertThat(second.items()).hasSize(2);
+        assertThat(first.totalElements()).isEqualTo(12);
+        assertThat(first.totalPages()).isEqualTo(2);
+    }
 }
