@@ -2,6 +2,7 @@ package io.github.alexandrefilipiak.requestmanagement.infrastructure.persistence
 
 import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
 import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.StateChange;
 import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestRepository;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,8 @@ import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
 import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
 import org.springframework.context.annotation.Import;
 import io.github.alexandrefilipiak.requestmanagement.TestcontainersConfiguration;
+
+import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
 
 @DataJpaTest
 @Import(TestcontainersConfiguration.class)
@@ -39,6 +42,21 @@ public class RequestRepositoryTest {
         Assertions.assertThat(fromDb.getPublicationNumber()).isNull();
         Assertions.assertThat(fromDb.getState()).isEqualTo(RequestState.CREATED);
         Assertions.assertThat(fromDb.getReason()).isNull();
+    }
+
+    @Test
+    @DisplayName("the history is saved with the request and read back in order")
+    void historyIsPersisted() {
+        Request request = Request.create("name", "content");
+        request.verify();
+        Long id = repository.save(request).getId();
+        entityManager.flush();
+        entityManager.clear();
+
+        Request found = repository.findById(id).orElseThrow();
+
+        Assertions.assertThat(found.getHistory()).extracting(StateChange::getToState)
+                .containsExactly(CREATED, VERIFIED);
     }
 
     @Test

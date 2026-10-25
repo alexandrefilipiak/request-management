@@ -18,7 +18,6 @@ The specification leaves several points open. This document lists the interpreta
 - **The state machine is implemented without a dedicated library.** the diagram is small and fixed, so a library would bring configuration and dependencies without adding capability.
 - **The state machine is a plain Java class, not a Spring bean.** It is pure domain logic, with no dependencies.
 
-
 ## Package structure
 
 - Two top-level packages mirror the inside and the outside of the hexagon: `core` holds `domain` (entity, states, events, state machine, business exceptions) and `usecases` (services, commands and the repository port); `infrastructure` holds `api` (REST adapter) and `persistence` (JPA adapter). The dependency rule is that `infrastructure` depends on `core` and never the reverse; inside `core`, `usecases` depends on `domain`, which depends on nothing else.
@@ -58,6 +57,13 @@ The specification leaves several points open. This document lists the interpreta
 - **All errors are RFC 9457 problem details**, including the ones produced by Spring itself (validation, malformed JSON, unknown routes), through `ResponseEntityExceptionHandler`.
 - **Status mapping:** 404 for an unknown id; 409 for a transition the current state does not allow, an edit outside the editable states, and an optimistic locking conflict (the client reloads and retries); 400 for validation errors; 500 for anything unexpected.
 - **Messages from domain exceptions are returned to the client as-is.** They are written for the end user by contract (see `DomainException` and `RequestNotFoundException`) and contain only information the caller already has. Messages from frameworks (Spring, Hibernate) are never exposed: the optimistic locking and the unexpected-error responses carry a fixed sentence, and the unexpected error is logged server-side with its stack trace.
+
+## Audit Log
+- **The history is part of the `Request`.** Each state change appends a `StateChange` entry to the request's history.
+- **Creation is the first entry**, with `CREATE` as event and no previous state.
+- **Refused transitions are not recorded.** The history reflects what happened to the request, not what was attempted.
+- **Content edits are not audited.** The specification asks for the history of state changes, and editing the body does not change the state.
+- **The history is returned in full, oldest first.** The diagram has no cycles, so a request has at most four entries (creation plus three transitions on the longest path); pagination would be pointless.
 
 ## Testing
 
