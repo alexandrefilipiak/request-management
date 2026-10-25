@@ -11,7 +11,7 @@ The specification leaves several points open. This document lists the interpreta
  
 - **Flyway owns the schema.** So Hibernate runs with `spring.jpa.hibernate.ddl-auto=validate`: it never creates or alters tables, it only checks that the entities match the migrations.
 - **Migration naming is validated** I set up `spring.flyway.validate-migration-naming=true`, so a misnamed migration file makes startup fail instead of being silently ignored (I had the case of a file name that I incorrectly typed: v1__init.sql instead of V1_init.sql)
-- `spring.jpa.open-in-view=false`: the database session is closed at the end of each service transaction instead of being held for the whole HTTP request. This avoids holding connections during serialization and hidden lazy-loading queries; data needed by a response is loaded explicitly in the service layer.
+- **Open Session in View is disabled** (`spring.jpa.open-in-view=false`). When true, it keeps a JPA session, and therefore a database connection, open for the whole HTTP request so that lazy associations can be loaded. The pool has 10 connections by default, so under load it is exhausted by requests that are no longer doing any database work, and every other request waits. With it disabled, a connection is held only for the service transaction, and lazy associations must be loaded by the service before it returns, never by the controller.
 
 ## The state machine
 

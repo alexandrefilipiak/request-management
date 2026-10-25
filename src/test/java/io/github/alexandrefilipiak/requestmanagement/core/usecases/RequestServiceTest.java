@@ -1,6 +1,7 @@
 package io.github.alexandrefilipiak.requestmanagement.core.usecases;
 
 import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.StateChange;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestFixtures.aRequestIn;
@@ -104,6 +106,20 @@ class RequestServiceTest {
 
         //then
         assertThat(result).isSameAs(request);
+    }
+
+    @Test
+    @DisplayName("getting the history returns the request's entries oldest first")
+    void getHistoryReturnsEntries() {
+        //given
+        Request request = aRequestIn(VERIFIED);
+        when(repository.findById(42L)).thenReturn(Optional.of(request));
+
+        //when
+        List<StateChange> history = service.getHistory(42L);
+
+        //then
+        assertThat(history).extracting(StateChange::getToState).containsExactly(CREATED, VERIFIED);
     }
 
     @Test

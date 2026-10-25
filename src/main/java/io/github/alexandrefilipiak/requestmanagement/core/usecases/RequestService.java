@@ -1,8 +1,11 @@
 package io.github.alexandrefilipiak.requestmanagement.core.usecases;
 
 import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
+import io.github.alexandrefilipiak.requestmanagement.core.domain.StateChange;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Use cases on requests: creation, content edition and lifecycle transitions.
@@ -73,6 +76,17 @@ public class RequestService {
     @Transactional(readOnly = true)
     public Request get(long id) {
         return load(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<StateChange> getHistory(long id) {
+        // The history is a lazy collection: copying it here forces it to load while the
+        // transaction (and the JPA session) is still open. Open Session in View is disabled
+        // (spring.jpa.open-in-view=false in application.properties),
+        // so a caller iterating the collection after this method returned would get a
+        // LazyInitializationException. The copy is also an immutable snapshot, which is
+        // what a use case should hand out rather than a live persistence collection.
+        return List.copyOf(load(id).getHistory());
     }
 
     private Request load(long id) {
