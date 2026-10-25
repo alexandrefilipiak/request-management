@@ -16,9 +16,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.PUBLISH;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestFixtures.aRequestIn;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
-import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.endsWith;
-import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -198,10 +197,10 @@ class RequestControllerTest {
     @Test
     @DisplayName("an unexpected error returns 500 without details")
     void unexpectedError() throws Exception {
-        doThrow(new IllegalStateException("secret internals")).when(service).verify(42L);
+        doThrow(new IllegalStateException("Simulated failure for testing the 500 handler (this exception is normal, it means the test passes)")).when(service).verify(42L);
 
         mvc.perform(post("/requests/42/verify"))
                 .andExpect(status().isInternalServerError())
-                .andExpect(jsonPath("$.detail").value(not(containsString("secret"))));
+                .andExpect(jsonPath("$.detail").value(not(containsString("Simulated failure"))));
     }
 }
