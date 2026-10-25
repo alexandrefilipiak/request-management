@@ -8,4 +8,5 @@ public interface RequestRepository {
     Optional<Request> findById(long id);
     Request save(Request request);
     long nextPublicationNumber();
+    RequestPage search(ListRequestsQuery query);
 }

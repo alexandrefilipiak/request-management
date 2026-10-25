@@ -183,4 +183,19 @@ class RequestServiceTest {
         assertThat(request.getReason()).isEqualTo("duplicate");
         verify(repository).save(request);
     }
+
+    @Test
+    @DisplayName("listing passes the query to the repository and returns its page")
+    void listCallsRepository() {
+        //given
+        ListRequestsQuery query = new ListRequestsQuery("budget", VERIFIED, 0, 10);
+        RequestPage page = new RequestPage(List.of(aRequestIn(VERIFIED)), 0, 10, 1);
+        when(repository.search(query)).thenReturn(page);
+
+        //when
+        RequestPage result = service.list(query);
+
+        //then
+        assertThat(result).isSameAs(page);
+    }
 }

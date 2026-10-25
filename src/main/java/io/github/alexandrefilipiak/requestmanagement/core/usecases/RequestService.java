@@ -89,6 +89,11 @@ public class RequestService {
         return List.copyOf(load(id).getHistory());
     }
 
+    @Transactional(readOnly = true)
+    public RequestPage list(ListRequestsQuery query) {
+        return repository.search(query);
+    }
+
     private Request load(long id) {
         return repository.findById(id).orElseThrow(() -> new RequestNotFoundException(id));
     }
