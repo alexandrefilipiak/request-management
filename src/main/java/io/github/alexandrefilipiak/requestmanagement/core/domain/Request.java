@@ -2,6 +2,11 @@ package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
 import jakarta.persistence.*;
 
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.*;
 
 /**
@@ -36,6 +41,10 @@ public class Request {
     @Column(unique = true)
     private Long publicationNumber;
 
+    @OneToMany(mappedBy = "request", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("occurredAt ASC, id ASC")
+    private List<StateChange> history = new ArrayList<>();
+
     @Version
     private long version;
 
@@ -47,6 +56,7 @@ public class Request {
         this.name = name;
         this.content = content;
         this.state = RequestState.CREATED;
+        record(null, RequestState.CREATED, CREATE, null);
     }
 
     /**
@@ -143,10 +153,16 @@ public class Request {
         if (event.isReasonRequired() && (reason == null || reason.isBlank())) {
             throw new ReasonRequiredException(event);
         }
+        RequestState from = this.state;
         this.state = RequestStateMachine.next(this.state, event);
         if (event.isReasonRequired()) {
             this.reason = reason.trim();
         }
+        record(from, this.state, event, event.isReasonRequired() ? reason.trim() : null);
+    }
+
+    private void record(RequestState from, RequestState to, RequestEvent event, String reason) {
+        history.add(new StateChange(this, from, to, event, reason, Instant.now()));
     }
 
     public Long getId() {
@@ -174,5 +190,12 @@ public class Request {
      */
     public Long getPublicationNumber() {
         return publicationNumber;
+    }
+
+    /**
+     * @return the history of state changes, oldest first; never empty, the first entry is the creation
+     */
+    public List<StateChange> getHistory() {
+        return Collections.unmodifiableList(history);
     }
 }

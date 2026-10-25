@@ -1,15 +1,12 @@
 package io.github.alexandrefilipiak.requestmanagement.core.domain;
 
-import io.github.alexandrefilipiak.requestmanagement.core.domain.ContentNotEditableException;
-import io.github.alexandrefilipiak.requestmanagement.core.domain.ReasonRequiredException;
-import io.github.alexandrefilipiak.requestmanagement.core.domain.Request;
-import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestFixtures.aRequestIn;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
-import static org.assertj.core.api.Assertions.*;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 
 public class RequestTest {
 
