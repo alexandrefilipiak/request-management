@@ -69,4 +69,8 @@ public class RequestController {
         return new PublishedResponse(service.publish(id));
     }
 
+    @GetMapping("/{id}/history")
+    HistoryResponse history(@PathVariable long id) {
+        return HistoryResponse.of(id, service.getHistory(id));
+    }
 }

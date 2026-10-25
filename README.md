@@ -43,6 +43,8 @@ docker compose down
  
 Integration tests start their own PostgreSQL container through Testcontainers, so Docker must be running, but the Compose database is not needed.
 
+The same command produces a JaCoCo coverage report in `target/site/jacoco/index.html`. Coverage is used to find untested paths
+
 ## API
 
 | Method | Path                           | Body                  | Response                                      |
@@ -55,6 +57,7 @@ Integration tests start their own PostgreSQL container through Testcontainers, s
 | POST   | `/requests/{id}/reject`        | `{"reason"}`          | 204, VERIFIED or ACCEPTED to REJECTED         |
 | POST   | `/requests/{id}/delete`        | `{"reason"}`          | 204, CREATED to DELETED                       |
 | POST   | `/requests/{id}/publish`       |                       | 200, `{"publicationNumber"}`, ACCEPTED to PUBLISHED |
+| GET    | `/requests/{id}/history`       |                       | 200, state changes oldest first                     |
 
 Mutations return no representation; `GET /requests/{id}` returns the current state:
 
@@ -66,6 +69,19 @@ Mutations return no representation; `GET /requests/{id}` returns the current sta
   "state": "VERIFIED",
   "reason": null,
   "publicationNumber": null
+}
+```
+
+The history lists every state change, including the creation, oldest first:
+
+```json
+{
+  "requestId": 1,
+  "entries": [
+    {"fromState": null, "toState": "CREATED", "event": "CREATE", "reason": null, "occurredAt": "2026-10-25T20:14:03.120Z"},
+    {"fromState": "CREATED", "toState": "VERIFIED", "event": "VERIFY", "reason": null, "occurredAt": "2026-10-25T20:15:41.887Z"},
+    {"fromState": "VERIFIED", "toState": "REJECTED", "event": "REJECT", "reason": "Incomplete content", "occurredAt": "2026-10-25T20:16:12.004Z"}
+  ]
 }
 ```
 
@@ -83,6 +99,7 @@ curl -i -X POST localhost:8080/requests/1/reject \
   -d '{"reason": "Incomplete content"}'
  
 curl localhost:8080/requests/1
+curl localhost:8080/requests/1/history
 ```
 
 ### Errors
@@ -101,7 +118,7 @@ Errors are returned as RFC 9457 problem details (`application/problem+json`):
 ```
 src/main/java/io/github/alexandrefilipiak/requestmanagement
     core
-        domain            Request entity, states, events, state machine, business exceptions
+        domain            Request and StateChange entities, states, events, state machine, business exceptions
         usecases          RequestService, commands and the RequestRepository port
     infrastructure
         api               REST controller, response records, exception handler
@@ -110,3 +127,4 @@ src/main/resources/db/migration     Flyway migrations
 src/test/java/...                   Tests and Testcontainers configuration
 compose.yaml                        Local PostgreSQL
 ```
+ 

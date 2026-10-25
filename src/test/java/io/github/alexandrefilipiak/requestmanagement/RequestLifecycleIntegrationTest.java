@@ -41,6 +41,11 @@ class RequestLifecycleIntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.state").value("PUBLISHED"))
                 .andExpect(jsonPath("$.publicationNumber").isNumber());
+
+        mvc.perform(get("/requests/{id}/history", id))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.entries.length()").value(4))
+                .andExpect(jsonPath("$.entries[3].toState").value("PUBLISHED"));
     }
 
     @Test

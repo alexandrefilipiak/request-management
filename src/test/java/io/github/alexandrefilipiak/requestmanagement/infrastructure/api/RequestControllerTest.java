@@ -203,4 +203,28 @@ class RequestControllerTest {
                 .andExpect(status().isInternalServerError())
                 .andExpect(jsonPath("$.detail").value(not(containsString("Simulated failure"))));
     }
+
+    @Test
+    @DisplayName("GET /requests/{id}/history returns the entries oldest first")
+    void history() throws Exception {
+        when(service.getHistory(42L)).thenReturn(aRequestIn(VERIFIED).getHistory());
+
+        mvc.perform(get("/requests/42/history"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.requestId").value(42))
+                .andExpect(jsonPath("$.entries.length()").value(2))
+                .andExpect(jsonPath("$.entries[0].event").value("CREATE"))
+                .andExpect(jsonPath("$.entries[0].fromState").value(nullValue()))
+                .andExpect(jsonPath("$.entries[1].fromState").value("CREATED"))
+                .andExpect(jsonPath("$.entries[1].toState").value("VERIFIED"));
+    }
+
+    @Test
+    @DisplayName("GET /requests/{id}/history returns 404 for an unknown id")
+    void historyUnknown() throws Exception {
+        when(service.getHistory(42L)).thenThrow(new RequestNotFoundException(42L));
+
+        mvc.perform(get("/requests/42/history"))
+                .andExpect(status().isNotFound());
+    }
 }
