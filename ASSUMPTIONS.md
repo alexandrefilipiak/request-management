@@ -64,4 +64,4 @@ The specification leaves several points open. This document lists the interpreta
 - **The project is developed test-first (TDD).** Each behavior starts with a failing test, followed by the minimal implementation and a refactoring step.
 - Integration tests run against a real PostgreSQL through Testcontainers rather than an in-memory database such as H2, so they exercise the same SQL, sequences and constraints as the real database.
 - The test container uses the same PostgreSQL version as the Compose database.
-
+- **Test pyramid.** The domain and the use cases are covered by fast, pure unit tests (the domain with no mocks at all, the use cases with a mocked repository port). The adapters are covered by Spring slice tests, `@DataJpaTest` against a real PostgreSQL in Testcontainers for persistence and `@WebMvcTest` with a mocked service for the API. A few end-to-end scenarios go through the full stack over MockMvc to prove the wiring; they do not repeat rules already tested below.
