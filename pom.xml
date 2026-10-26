@@ -28,6 +28,19 @@
 	</scm>
 	<properties>
 		<java.version>25</java.version>
+
+		<!-- Versions pinned above Spring Boot 4.1.1's managed ones for CVEs reported in October 2026.
+     None is reachable in this application (see ASSUMPTIONS.md, "Dependencies").
+     Remove each override once Spring Boot manages a patched version. -->
+		<!-- CVE-2026-101296, CVE-2026-101356, CVE-2026-103119, CVE-2026-88041 -->
+		<tomcat.version>11.0.27</tomcat.version>
+		<!-- CVE-2026-110879, CVE-2026-68497, CVE-2026-91776, CVE-2026-91777 (2.x line only present through springdoc) -->
+		<jackson-bom.version>3.1.8</jackson-bom.version>
+		<jackson-2-bom.version>2.21.8</jackson-2-bom.version>
+		<!-- CVE-2026-19880 -->
+		<logback.version>1.6.3</logback.version>
+		<!-- CVE-2026-107314, CVE-2026-107315 -->
+		<postgresql.version>42.7.14</postgresql.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -90,6 +103,11 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>testcontainers-postgresql</artifactId>
 			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springdoc</groupId>
+			<artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+			<version>3.2.0</version>
 		</dependency>
 	</dependencies>
 

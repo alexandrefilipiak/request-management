@@ -1,21 +1,49 @@
-# Request Management Application
+# Request Management API
+ 
+Backend service managing the lifecycle of requests, where each request moves through a defined set of states governed by a state diagram. The functionality is exposed as a REST API; there is no GUI.
 
-# Request Management
- 
-Backend service managing the lifecycle of requests, where each request moves through a defined set of states governed by a state diagram. The functionality will be exposed as a REST API; there is no GUI.
- 
+Status : all specifications implemented
+
 Design decisions are documented in [ASSUMPTIONS.md](ASSUMPTIONS.md).
- 
+
+## State diagram
+
+```mermaid
+stateDiagram-v2
+    [*] --> CREATED : Create
+    CREATED --> DELETED : Delete
+    CREATED --> VERIFIED : Verify
+    VERIFIED --> REJECTED : Reject
+    VERIFIED --> ACCEPTED : Accept
+    ACCEPTED --> REJECTED : Reject
+    ACCEPTED --> PUBLISHED : Publish
+    DELETED --> [*]
+    REJECTED --> [*]
+    PUBLISHED --> [*]
+```
+
+| From     | Event   | To        | Constraint                        |
+|----------|---------|-----------|-----------------------------------|
+| (none)   | Create  | CREATED   | name and content are mandatory    |
+| CREATED  | Delete  | DELETED   | reason is mandatory               |
+| CREATED  | Verify  | VERIFIED  |                                   |
+| VERIFIED | Reject  | REJECTED  | reason is mandatory               |
+| VERIFIED | Accept  | ACCEPTED  |                                   |
+| ACCEPTED | Reject  | REJECTED  | reason is mandatory               |
+| ACCEPTED | Publish | PUBLISHED | a unique publication number is assigned |
+
+DELETED, REJECTED and PUBLISHED are terminal. The content can only be edited in CREATED or VERIFIED; editing does not change the state.
+
 ## Tech stack
  
-- Java and Spring Boot 4 (Web, Data JPA, Validation)
+- Java 25 and Spring Boot 4 (Web, Data JPA, Validation), springdoc for OpenAPI
 - PostgreSQL 18, schema managed with Flyway
-- JUnit 5, AssertJ and Testcontainers for tests
+- JUnit 5, AssertJ, Mockito and Testcontainers for tests, JaCoCo for coverage
 - Maven (wrapper included)
 
 ## Prerequisites
  
-- A JDK matching the `java.version` declared in `pom.xml`
+- JDK 25
 - Docker, used both by Docker Compose (local database) and by Testcontainers (tests)
 
 ## Running the application
@@ -27,7 +55,7 @@ docker compose up -d
 ./mvnw spring-boot:run
 ```
  
-Flyway applies the migrations on startup.
+The API is served on http://localhost:8080; Flyway applies the migrations on startup. The interactive API documentation is at http://localhost:8080/swagger-ui.html and the OpenAPI document at http://localhost:8080/v3/api-docs, both generated from the code by springdoc.
  
 To stop the database (add `-v` to also delete its data):
  

@@ -65,6 +65,10 @@ The specification leaves several points open. This document lists the interpreta
 - **Content edits are not audited.** The specification asks for the history of state changes, and editing the body does not change the state.
 - **The history is returned in full, oldest first.** The diagram has no cycles, so a request has at most four entries (creation plus three transitions on the longest path); pagination would be pointless.
 
+## Dependencies
+
+- The IDE's dependency scanner was run on the final dependency tree. Four libraries are pinned above the versions managed by Spring Boot 4.1.1 to pick up security fixes published in October 2026; the overrides are grouped and commented in the pom.xml and should be removed once Spring Boot manages patched versions.
+
 ## Testing
 
 - **The project is developed test-first (TDD).** Each behavior starts with a failing test, followed by the minimal implementation and a refactoring step.
