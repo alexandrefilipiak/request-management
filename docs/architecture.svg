@@ -1,0 +1,53 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="520" viewBox="0 0 1000 520" font-family="-apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#333"/>
+    </marker>
+  </defs>
+
+  <rect width="1000" height="520" fill="#ffffff"/>
+
+  <!-- Outer hexagon: core -->
+  <polygon points="500,30 720,140 720,360 500,470 280,360 280,140" fill="#f4f6fa" stroke="#333" stroke-width="2"/>
+  <text x="500" y="62" text-anchor="middle" font-weight="bold" font-size="15" fill="#333">core</text>
+
+  <!-- usecases label -->
+  <text x="500" y="102" text-anchor="middle" font-weight="bold" fill="#333">usecases</text>
+  <text x="500" y="121" text-anchor="middle" fill="#555">RequestService</text>
+  <text x="500" y="139" text-anchor="middle" fill="#555">commands, ListRequestsQuery</text>
+
+  <!-- Inner hexagon: domain -->
+  <polygon points="500,165 610,220 610,330 500,385 390,330 390,220" fill="#ffffff" stroke="#333" stroke-width="2"/>
+  <text x="500" y="232" text-anchor="middle" font-weight="bold" fill="#333">domain</text>
+  <text x="500" y="256" text-anchor="middle" fill="#555">Request, StateChange</text>
+  <text x="500" y="275" text-anchor="middle" fill="#555">RequestState, RequestEvent</text>
+  <text x="500" y="294" text-anchor="middle" fill="#555">RequestStateMachine</text>
+  <text x="500" y="313" text-anchor="middle" fill="#555">DomainException</text>
+
+  <!-- Output port on the right edge -->
+  <rect x="680" y="212" width="80" height="76" rx="4" fill="#ffffff" stroke="#333" stroke-width="2"/>
+  <text x="720" y="236" text-anchor="middle" font-weight="bold" font-size="12" fill="#333">port</text>
+  <text x="720" y="256" text-anchor="middle" font-size="12" fill="#555">Request</text>
+  <text x="720" y="272" text-anchor="middle" font-size="12" fill="#555">Repository</text>
+
+  <!-- Driving adapter: api -->
+  <text x="130" y="190" text-anchor="middle" font-size="12" fill="#777">HTTP (driving side)</text>
+  <rect x="30" y="205" width="200" height="90" rx="6" fill="#ffffff" stroke="#333" stroke-width="2"/>
+  <text x="130" y="232" text-anchor="middle" font-weight="bold" fill="#333">infrastructure.api</text>
+  <text x="130" y="254" text-anchor="middle" fill="#555">RequestController</text>
+  <text x="130" y="272" text-anchor="middle" fill="#555">RequestExceptionHandler</text>
+  <line x1="230" y1="250" x2="318" y2="250" stroke="#333" stroke-width="2" marker-end="url(#arrow)"/>
+  <text x="274" y="240" text-anchor="middle" font-size="11" fill="#555">calls</text>
+
+  <!-- Driven adapter: persistence -->
+  <text x="870" y="190" text-anchor="middle" font-size="12" fill="#777">PostgreSQL (driven side)</text>
+  <rect x="770" y="205" width="200" height="90" rx="6" fill="#ffffff" stroke="#333" stroke-width="2"/>
+  <text x="870" y="232" text-anchor="middle" font-weight="bold" fill="#333">infrastructure.persistence</text>
+  <text x="870" y="254" text-anchor="middle" fill="#555">JpaRequestRepository</text>
+  <text x="870" y="272" text-anchor="middle" fill="#555">RequestSpecifications</text>
+  <line x1="770" y1="250" x2="762" y2="250" stroke="#333" stroke-width="2" stroke-dasharray="5,4" marker-end="url(#arrow)"/>
+  <text x="765" y="312" text-anchor="middle" font-size="11" fill="#555">implements the port</text>
+
+  <!-- Legend -->
+  <text x="500" y="500" text-anchor="middle" font-size="12" fill="#555">Dependencies point inward: infrastructure depends on core, core depends on nothing else.</text>
+</svg>
