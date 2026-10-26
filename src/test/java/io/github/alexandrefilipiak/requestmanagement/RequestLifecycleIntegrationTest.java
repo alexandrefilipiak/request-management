@@ -10,7 +10,11 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.UUID;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.everyItem;
+import static org.hamcrest.Matchers.is;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -84,6 +88,31 @@ class RequestLifecycleIntegrationTest {
 
         //then
         assertThat(n2).isGreaterThan(n1);
+    }
+
+    @Test
+    @DisplayName("requests can be listed by name and state with pagination")
+    void listing() throws Exception {
+        //given: a name prefix unique to this test so rows from other tests don't interfere
+        String prefix = "Listing-" + UUID.randomUUID();
+        String a = create(prefix + " alpha", "c");
+        String b = create(prefix + " beta", "c");
+        create(prefix + " gamma", "c");
+        mvc.perform(post("/requests/{id}/verify", a)).andExpect(status().isNoContent());
+        mvc.perform(post("/requests/{id}/verify", b)).andExpect(status().isNoContent());
+
+        //then
+
+        // lowercased on purpose: the name match is case-insensitive
+        mvc.perform(get("/requests").param("name", prefix.toLowerCase()).param("state", "VERIFIED"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items[*].state", everyItem(is("VERIFIED"))));
+
+        mvc.perform(get("/requests").param("name", prefix).param("size", "2"))
+                .andExpect(jsonPath("$.items.length()").value(2))
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.totalPages").value(2));
     }
 
     private String create(String name, String content) throws Exception {

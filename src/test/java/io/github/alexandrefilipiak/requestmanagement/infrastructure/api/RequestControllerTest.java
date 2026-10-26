@@ -2,10 +2,13 @@ package io.github.alexandrefilipiak.requestmanagement.infrastructure.api;
 
 import io.github.alexandrefilipiak.requestmanagement.core.domain.ContentNotEditableException;
 import io.github.alexandrefilipiak.requestmanagement.core.domain.InvalidTransitionException;
+import io.github.alexandrefilipiak.requestmanagement.core.usecases.ListRequestsQuery;
 import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestNotFoundException;
+import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestPage;
 import io.github.alexandrefilipiak.requestmanagement.core.usecases.RequestService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
@@ -13,9 +16,12 @@ import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestEvent.PUBLISH;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestFixtures.aRequestIn;
 import static io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState.*;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.Matchers.endsWith;
 import static org.mockito.ArgumentMatchers.any;
@@ -226,5 +232,56 @@ class RequestControllerTest {
 
         mvc.perform(get("/requests/42/history"))
                 .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("GET /requests applies the default page and size")
+    void listDefaults() throws Exception {
+        when(service.list(any())).thenReturn(new RequestPage(List.of(), 0, 10, 0));
+
+        mvc.perform(get("/requests"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items").isEmpty())
+                .andExpect(jsonPath("$.page").value(0))
+                .andExpect(jsonPath("$.size").value(10))
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0));
+
+        ArgumentCaptor<ListRequestsQuery> captor = ArgumentCaptor.forClass(ListRequestsQuery.class);
+        verify(service).list(captor.capture());
+        assertThat(captor.getValue()).isEqualTo(new ListRequestsQuery(null, null, 0, 10));
+    }
+
+    @Test
+    @DisplayName("GET /requests passes the filters and paging to the use case")
+    void listWithFilters() throws Exception {
+        when(service.list(any())).thenReturn(new RequestPage(List.of(aRequestIn(VERIFIED)), 1, 5, 6));
+
+        mvc.perform(get("/requests").param("name", "budget").param("state", "VERIFIED")
+                        .param("page", "1").param("size", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].state").value("VERIFIED"))
+                .andExpect(jsonPath("$.totalPages").value(2));
+
+        verify(service).list(new ListRequestsQuery("budget", VERIFIED, 1, 5));
+    }
+
+    @Test
+    @DisplayName("GET /requests with a size above 100 returns 400")
+    void listSizeTooLarge() throws Exception {
+        mvc.perform(get("/requests").param("size", "200"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("GET /requests with an unknown state returns 400")
+    void listUnknownState() throws Exception {
+        mvc.perform(get("/requests").param("state", "WHATEVER"))
+                .andExpect(status().isBadRequest());
+
+        verifyNoInteractions(service);
     }
 }

@@ -1,7 +1,10 @@
 package io.github.alexandrefilipiak.requestmanagement.infrastructure.api;
 
+import io.github.alexandrefilipiak.requestmanagement.core.domain.RequestState;
 import io.github.alexandrefilipiak.requestmanagement.core.usecases.*;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -72,5 +75,13 @@ public class RequestController {
     @GetMapping("/{id}/history")
     HistoryResponse history(@PathVariable long id) {
         return HistoryResponse.of(id, service.getHistory(id));
+    }
+
+    @GetMapping
+    RequestPageResponse list(@RequestParam(required = false) String name,
+                             @RequestParam(required = false) RequestState state,
+                             @RequestParam(defaultValue = "0") @Min(0) int page,
+                             @RequestParam(defaultValue = "10") @Min(1) @Max(100) int size) {
+        return RequestPageResponse.from(service.list(new ListRequestsQuery(name, state, page, size)));
     }
 }

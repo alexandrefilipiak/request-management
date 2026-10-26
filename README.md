@@ -50,6 +50,7 @@ The same command produces a JaCoCo coverage report in `target/site/jacoco/index.
 | Method | Path                           | Body                  | Response                                      |
 |--------|--------------------------------|-----------------------|-----------------------------------------------|
 | POST   | `/requests`                    | `{"name", "content"}` | 201, `Location: /requests/{id}`, `{"id"}`     |
+| GET    | `/requests`                    |                       | 200, page of requests (see parameters below)  |
 | GET    | `/requests/{id}`               |                       | 200, full request                             |
 | PUT    | `/requests/{id}/content`       | `{"content"}`         | 204 (CREATED or VERIFIED only)                |
 | POST   | `/requests/{id}/verify`        |                       | 204, CREATED to VERIFIED                      |
@@ -58,6 +59,18 @@ The same command produces a JaCoCo coverage report in `target/site/jacoco/index.
 | POST   | `/requests/{id}/delete`        | `{"reason"}`          | 204, CREATED to DELETED                       |
 | POST   | `/requests/{id}/publish`       |                       | 200, `{"publicationNumber"}`, ACCEPTED to PUBLISHED |
 | GET    | `/requests/{id}/history`       |                       | 200, state changes oldest first                     |
+
+Listing parameters: `name` (partial match, case-insensitive), `state` (exact), `page` (0-based, default 0), `size` (default 10, maximum 100). Filters combine with AND; results are newest first.
+
+```json
+{
+  "items": [ { "id": 3, "name": "Budget approval", "state": "VERIFIED", "...": "..." } ],
+  "page": 0,
+  "size": 10,
+  "totalElements": 1,
+  "totalPages": 1
+}
+```
 
 Mutations return no representation; `GET /requests/{id}` returns the current state:
 
@@ -100,6 +113,7 @@ curl -i -X POST localhost:8080/requests/1/reject \
  
 curl localhost:8080/requests/1
 curl localhost:8080/requests/1/history
+curl 'localhost:8080/requests?name=budget&state=VERIFIED&page=0&size=10'
 ```
 
 ### Errors
@@ -108,7 +122,7 @@ Errors are returned as RFC 9457 problem details (`application/problem+json`):
 
 | Status | When                                                                                   |
 |--------|----------------------------------------------------------------------------------------|
-| 400    | Validation failure: missing or blank name, content or reason; malformed JSON           |
+| 400    | Validation failure: missing or blank name, content or reason; malformed JSON; invalid listing parameters |
 | 404    | No request with that id                                                                |
 | 409    | Transition not allowed from the current state, content not editable, or concurrent modification |
 | 500    | Unexpected error; the response carries no technical detail, the server log does        |
