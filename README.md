@@ -34,6 +34,14 @@ stateDiagram-v2
 
 DELETED, REJECTED and PUBLISHED are terminal. The content can only be edited in CREATED or VERIFIED; editing does not change the state.
 
+## Architecture
+
+A simplified hexagonal architecture: the domain and the use cases form the core, the REST and JPA adapters sit outside, and the persistence adapter implements a port declared in the core.
+
+![Architecture](docs/architecture.svg)
+
+Dependencies point inward: `infrastructure` depends on `core`, `core` depends on nothing else. Input ports and a separate persistence model are deliberately omitted at this size; see [ASSUMPTIONS.md](ASSUMPTIONS.md).
+
 ## Tech stack
  
 - Java 25 and Spring Boot 4 (Web, Data JPA, Validation), springdoc for OpenAPI
